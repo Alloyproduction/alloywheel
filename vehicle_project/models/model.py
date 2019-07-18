@@ -439,6 +439,22 @@ class InheritSale(models.Model):
 
     project = fields.Many2one('project.project', string='Project')
     agency_name = fields.Many2one('res.partner', string='Agency Name')
+    is_task_delivered = fields.Boolean(compute='get_delivered_task', default=True)
+
+    def get_delivered_task(self):
+        for rec in self:
+            task_ids = self.env['project.task'].search([('sale', '=',rec.id)])
+            if task_ids:
+                for line in task_ids:
+                    if line.stage_id.name != 'Delivery':
+                        rec.is_task_delivered = True
+                        break
+            else:
+                rec.is_task_delivered = True
+                break
+
+
+
 
     def action_task(self):
         action = self.env.ref('project.project_task_action_sub_task').read()[0]
